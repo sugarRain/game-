@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>贪吃蛇2.0面向对象</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		#container{
+			width: 1000px;
+			border: 1px solid #000;
+			margin: 50px auto;
+		}
+		#ground{
+			width: 1000px;
+			height: 500px;
+			background: #ccc;
+			position: relative;
+		}
+		#ground .block{
+			width: 20px;
+			height: 20px;
+			float: left;
+			background: orange;
+		}
+		#ground .section{
+			background: red;
+			position: absolute;
+		}
+		#ground .food{
+			background: green;
+			position: absolute;
+		}
+		#control{
+			height: 50px;
+			line-height: 50px;
+		}
+		#banner{
+			float: left;
+		}
+		#buttons{
+			float: right;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="container">
+		<div id="ground"></div>
+		<div id="control">
+			<span id="banner">JavaScript 贪吃蛇 By 唯创网讯</span>
+			<div id="buttons">
+				<button id="btn-play">开始</button>
+				<button id="btn-pause">暂停</button>
+			</div>
+		</div>
+	</div>
+	<script>
+
+		(function(){
+
+			var oGround = document.getElementById('ground');
+			var food;
+
+			var ground = {//草场
+				init: function(){
+					//1. 初始化草场				
+					for(var i=0; i<50*25; i++){
+						var oDiv = document.createElement('div');
+						oDiv.className = 'block';
+						oGround.appendChild(oDiv);
+					}
+				},
+				createFood: function(){
+					do{
+						var bFlag = true;//一个标识位，true代表找到合适的坐标，false没找到
+						var iLeft = Math.floor(Math.random() * 50) * 20;//随机产生食物的横坐标
+						var iTop = Math.floor(Math.random() * 25) * 20;//随机产生食物的纵坐标
+
+						for(var i=0; i<snake.body.length; i++){
+							if(snake.body[i].offsetLeft == iLeft && snake.body[i].offsetTop == iTop){
+								bFlag = false;//如果食物坐标与蛇身重合，将bFlag改为false，代表没找到
+								break;
+							}
+						}
+
+					}while(!bFlag);
+					food = document.createElement('div');
+					food.className = 'block food';
+					food.style.left = iLeft + 'px';
+					food.style.top = iTop + 'px';
+					oGround.appendChild(food);
+				}
+			};
+
+			var snake = {//蛇
+				speed: 300,
+				direction: 'right',
+				body: [],
+				init: function(){
+					//2. 初始化小蛇
+					for(var i=0; i<3; i++){
+						var oDiv = document.createElement('div');
+						oDiv.className = 'block section';
+						oDiv.style.left = (3 - i) * 20 + 'px';
+						oDiv.style.top = '60px';
+						oGround.appendChild(oDiv);
+						snake.body.push(oDiv);//将蛇的每一小节放到蛇身的数组中
+					}
+				},
+				move: function(){
+					var snakeHead = snake.body[0];//取出蛇头
+					var nextPos = {//蛇头的下一个目标位置
+						left: snakeHead.offsetLeft,
+						top: snakeHead.offsetTop
+					};
+					if(snake.direction == 'left'){
+						nextPos.left -= 20;
+					}else if(snake.direction == 'up'){
+						nextPos.top -= 20;
+					}else if(snake.direction == 'right'){
+						nextPos.left += 20;
+					}else if(snake.direction == 'down'){
+						nextPos.top += 20;
+					}
+
+					//蛇吃食物
+					if(nextPos.left == food.offsetLeft && nextPos.top == food.offsetTop){
+						var snakeTailPos = {
+							left: snake.body[snake.body.length-1].offsetLeft,
+							top: snake.body[snake.body.length-1].offsetTop
+						};
+						// console.log(snakeTailPos);
+					}
+
+					for(var i=0; i<snake.body.length; i++){
+						var nowPos = {
+							left: snake.body[i].offsetLeft,
+							top: snake.body[i].offsetTop
+						};
+						snake.body[i].style.left = nextPos.left + 'px';
+						snake.body[i].style.top = nextPos.top + 'px';
+						nextPos = nowPos;
+					}
+
+					if(snakeHead.offsetLeft == food.offsetLeft && snakeHead.offsetTop == food.offsetTop){//蛇真正吃到食物
+						var snakeTail = snake.body[snake.body.length-1];
+						var snakeTailNowPos = {
+							left: snakeTail.offsetLeft,
+							top: snakeTail.offsetTop
+						};
+						food.className = 'block section';
+						snake.body.splice(snake.body.length-1, 0, food);
+						snakeTail.style.left = snakeTailPos.left + 'px';
+						snakeTail.style.top = snakeTailPos.top + 'px';
+						food.style.left = snakeTailNowPos.left + 'px';
+						food.style.top = snakeTailNowPos.top + 'px';
+						ground.createFood();//生成新的食物
+
+					}
+				},
+				eat: function(){
+
+				}
+			};
+
+			var game = {//游戏对象
+				init: function(){
+					ground.init();
+					snake.init();
+					ground.createFood();
+
+					var oBtnPlay = document.getElementById('btn-play');
+					oBtnPlay.onclick = function(){
+						game.start();
+					};
+					//键盘事件处理
+					document.onkeydown = function(e){
+						e = e || window.event;
+						var keyCode = e.which || e.keyCode;
+						switch(keyCode){
+							case 37://left
+								if(snake.direction != 'right'){
+									snake.direction = 'left';
+								}
+								
+								break;
+							case 38://up
+								snake.direction = 'up';
+
+								break;
+							case 39://right
+								snake.direction = 'right';
+								
+
+								break;
+							case 40://down
+								snake.direction = 'down';
+								break;
+						}
+					};
+				},
+				start: function(){
+					setInterval(function(){
+						snake.move();
+					}, snake.speed);
+				},
+				pause: function(){
+
+				}
+			};
+
+			game.init();//游戏初始化
+
+		})();
+
+	</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
